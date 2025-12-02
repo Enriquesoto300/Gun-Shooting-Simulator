@@ -1,93 +1,68 @@
 from abc import ABC, abstractmethod
 
-# ---------------------------------------------------------
-# 1. ABSTRACCIÓN & ENCAPSULAMIENTO
-# ---------------------------------------------------------
-
-class Weapon(ABC): # ABC convierte esta clase en Abstracta (no se puede crear directamente)
+# --- 1. CLASE BASE (ABSTRACCIÓN Y ENCAPSULAMIENTO) ---
+class Weapon(ABC):
     def __init__(self, name, ammo, damage):
-        self.__name = name      # Privado (__): Solo accesible dentro de esta clase
-        self.__ammo = ammo      # Privado (__): Protege el estado interno
-        self._damage = damage   # Protegido (_): Accesible por clases hijas
+        self.__name = name      # Privado: Solo accesible dentro de esta clase
+        self.__ammo = ammo      # Privado: Protege la cantidad de balas
+        self._damage = damage   # Protegido: Accesible por las clases hijas
 
-    # Getter: Permite leer el atributo privado de forma segura
     @property
-    def name(self):
+    def name(self):             # Getter: Permite leer el nombre sin modificarlo
         return self.__name
 
-    # Método común: Todas las armas comparten esta lógica (Herencia de comportamiento)
-    def reload(self, amount):
+    def reload(self, amount):   # Método compartido por todas las armas
         self.__ammo += amount
-        print(f"🔄 {self.__name} recargada. Balas actuales: {self.__ammo}")
+        print(f"🔄 {self.__name} recargada. Balas: {self.__ammo}")
 
-    # Método para usar munición internamente (Acceso controlado)
-    def _use_ammo(self):
+    def _use_ammo(self):        # Helper interno para gestionar munición
         if self.__ammo > 0:
             self.__ammo -= 1
             return True
         print(f"❌ {self.__name} hizo click (Sin munición)")
         return False
 
-    # Método Abstracto: Obliga a las hijas a definir CÓMO disparan (Polimorfismo)
-    @abstractmethod
+    @abstractmethod             # Obliga a las hijas a tener su propia versión de 'shoot'
     def shoot(self):
         pass
 
-# ---------------------------------------------------------
-# 2. HERENCIA & POLIMORFISMO
-# ---------------------------------------------------------
-
-class Rifle(Weapon): # Hereda todo de Weapon
-    def shoot(self):
-        # Polimorfismo: Implementación específica para Rifle
+# --- 2. SUBCLASES (HERENCIA Y POLIMORFISMO) ---
+class Rifle(Weapon):
+    def shoot(self):            # Implementación única para Rifle
         if self._use_ammo():
-            print(f"💥 {self.name} disparó una ráfaga precisa! Daño: {self._damage}")
+            print(f"💥 {self.name} dispara una ráfaga precisa. Daño: {self._damage}")
 
-class Shotgun(Weapon): # Hereda todo de Weapon
-    def shoot(self):
-        # Polimorfismo: Implementación diferente (dispersión)
+class Shotgun(Weapon):
+    def shoot(self):            # Implementación única para Escopeta
         if self._use_ammo():
-            print(f"💥 {self.name} disparó perdigones dispersos! Daño: {self._damage * 3} (Corto alcance)")
+            print(f"💥 {self.name} dispara perdigones dispersos. Daño masivo: {self._damage * 3}")
 
-class Pistol(Weapon): # Hereda todo de Weapon
-    def shoot(self):
-        # Polimorfismo: Implementación diferente (tiro rápido)
-        if self._use_ammo():
-            print(f"💥 {self.name} disparó rápido. Daño: {self._damage}")
-
-# ---------------------------------------------------------
-# 3. COMPOSICIÓN
-# ---------------------------------------------------------
-
+# --- 3. CLASE GESTORA (COMPOSICIÓN) ---
 class ShootingRange:
     def __init__(self):
-        self.weapons = [] # Composición: Esta clase "TIENE" una lista de objetos Weapon
+        self.weapons = []       # Composición: El campo de tiro "tiene" armas
 
-    def add_weapon(self, weapon: Weapon):
+    def add_weapon(self, weapon):
         self.weapons.append(weapon)
 
-    def start_simulation(self):
-        print("\n--- INICIANDO SIMULACIÓN DE TIRO ---")
-        # Itera sobre la lista (La clase contenedora gestiona a las contenidas)
-        for weapon in self.weapons:
-            weapon.shoot() 
+    def start(self):
+        print("\n--- INICIO DE SIMULACIÓN ---")
+        for weapon in self.weapons:  # Itera sin importar qué tipo de arma sea
+            weapon.shoot()           # Polimorfismo: Cada arma sabe cómo disparar
             weapon.reload(5)
             weapon.shoot()
-            print("-" * 30)
+            print("---")
 
-# ---------------------------------------------------------
-# EJECUCIÓN
-# ---------------------------------------------------------
-
+# --- EJECUCIÓN ---
 if __name__ == "__main__":
-    # Instanciamos las clases concretas
-    my_rifle = Rifle(name="AK-47", ammo=10, damage=30)
-    my_shotgun = Shotgun(name="Mossberg", ammo=2, damage=50)
-    
-    # Usamos la composición (El campo de tiro contiene las armas)
-    range_sim = ShootingRange()
-    range_sim.add_weapon(my_rifle)
-    range_sim.add_weapon(my_shotgun)
+    # Creamos las armas
+    ak47 = Rifle("AK-47", 0, 30)
+    mossberg = Shotgun("Mossberg 500", 0, 50)
 
-    # Corremos la lógica
-    range_sim.start_simulation()
+    # Configuramos el simulador
+    sim = ShootingRange()
+    sim.add_weapon(ak47)
+    sim.add_weapon(mossberg)
+
+    # Corremos el programa
+    sim.start()
